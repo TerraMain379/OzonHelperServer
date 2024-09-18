@@ -4,12 +4,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import me.terramain.textexecuter.TextBuilder;
+import me.terramain.ozonhelperserver.ArraySortedMap;
+import me.terramain.ozonhelperserver.api.ErrorApi;
+import me.terramain.textexecuter.textbuilder.TextBuilder;
 
 import java.net.ConnectException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 public class OzonApi {
     public static String getProductInfo(String articul) throws ConnectException {
@@ -22,19 +22,34 @@ public class OzonApi {
         throw new NoSuchElementException();
     }
     public static List<String> getProductsInfo(String[] articuls) throws ConnectException {
-        TextBuilder bodyParam = new TextBuilder("[");
+        ArraySortedMap<String, Integer> articulsMap = new ArraySortedMap<>();
         for (String articul : articuls) {
-            bodyParam.append("\"").append(articul).append("\",");
+            if (articulsMap.containsKey(articul)){
+                int value = articulsMap.get(articul);
+                articulsMap.put(articul, value+1);
+            }
+            else articulsMap.put(articul, 1);
         }
-        bodyParam.removeChar(bodyParam.length()-1).append("]");
 
-        String json = new OzonRequestApi("/v2/product/info/list","POST")
-                .setBody("offer_id", bodyParam.getText(), false)
-                .request();
-        JsonArray jsonElements = JsonParser.parseString(json).getAsJsonObject().get("result").getAsJsonObject().get("items").getAsJsonArray();
+        articuls = new String[articulsMap.size()];
+        Iterator<Map.Entry<String, Integer>> iterator = articulsMap.entrySet().iterator();
+        for (int i = 0; i < articulsMap.size(); i++) {
+            articuls[i] = "\"" + iterator.next().getKey() + "\"";
+        }
+
+        String body = "{\"offer_id\":" + Arrays.toString(articuls) + "}";
+        JsonObject json = JsonParser.parseString(
+                new OzonRequestApi("/v2/product/info/list", "POST")
+                        .setBody("offer_id", Arrays.toString(articuls), false)
+                        .request()
+        ).getAsJsonObject();
         List<String> infoBlocks = new ArrayList<>();
-        for (JsonElement jsonElement : jsonElements) {
-            infoBlocks.add(jsonElement.toString());
+        JsonArray jsonArray = json.getAsJsonObject("result").getAsJsonArray("items");
+        for (int i = 0; i < articulsMap.size(); i++) {
+            int value = articulsMap.getByIndex(i);
+            for (int j = 0; j < value; j++) {
+                infoBlocks.add(jsonArray.get(i).toString());
+            }
         }
         return infoBlocks;
     }
@@ -70,5 +85,40 @@ public class OzonApi {
         List<String> productsInfo = getProductsInfo(articuls);
         productsInfo.replaceAll(json -> getDataFromJson(json, dataType));
         return productsInfo;
+    }
+
+    public static List<String> getFBOItems(String supply_order_id) throws ConnectException {
+        int num = getFBOItemsNumber(supply_order_id);
+        TextBuilder textBuilder = new TextBuilder("{\"supply_order_id\": \"")
+                .append(supply_order_id)
+                .append("\", \"page\": 1, \"page_size\": ")
+                .append(num)
+                .append("}");
+        String json = new OzonRequestApi("https://api-seller.ozon.ru/v1/supply-order/items", "POST")
+                .setBody(textBuilder.getText())
+                .request();
+        List<String> articuls = new ArrayList<>();
+        JsonArray array;
+        try {
+            array = JsonParser.parseString(json).getAsJsonObject().getAsJsonArray("items");
+        } catch (RuntimeException e) {
+            throw new NoSuchElementException();
+        }
+        for (JsonElement jsonElement : array) {
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            String articul = jsonObject.get("offer_id").getAsString();
+            int number = jsonObject.get("quantity").getAsNumber().intValue();
+            for (int i = 0; i < number; i++) {
+                articuls.add(articul);
+            }
+        }
+        return articuls;
+    }
+    public static int getFBOItemsNumber(String supply_order_id) throws ConnectException {
+
+        String json = new OzonRequestApi("https://api-seller.ozon.ru/v1/supply-order/get", "POST")
+                .setBody("supply_order_id",supply_order_id)
+                .request();
+        return JsonParser.parseString(json).getAsJsonObject().get("total_items_count").getAsInt();
     }
 }

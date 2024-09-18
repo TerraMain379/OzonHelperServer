@@ -9,6 +9,7 @@ public class ErrorApi {
             case 4 -> "Connection Error"+(args==null?"": "("+args[0]+")" )+", please try again";
             case 5 -> "api-seller.ozon.ru connection Error! Please try again";
             case 6 -> "you didn't specify articul(s)";
+            case 7 -> "read body json error";
             default -> "INVISIBLE ERROR";
         } + "\"}";
     }

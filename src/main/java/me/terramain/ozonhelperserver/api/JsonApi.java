@@ -1,8 +1,7 @@
 package me.terramain.ozonhelperserver.api;
 
-import me.terramain.textexecuter.TextBuilder;
 
-import java.util.List;
+import me.terramain.textexecuter.textbuilder.TextBuilder;
 
 public class JsonApi {
     public static String fix(String json){//TODO: fix from new textexecuter version!!!
