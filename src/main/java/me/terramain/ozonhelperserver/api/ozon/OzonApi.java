@@ -32,7 +32,7 @@ public class OzonApi {
         }
 
         articuls = new String[articulsMap.size()];
-        Iterator<Map.Entry<String, Integer>> iterator = articulsMap.entrySet().iterator();
+        Iterator<Map.Entry<String, Integer>> iterator = articulsMap.entryList().iterator();
         for (int i = 0; i < articulsMap.size(); i++) {
             articuls[i] = "\"" + iterator.next().getKey() + "\"";
         }
@@ -46,9 +46,11 @@ public class OzonApi {
         List<String> infoBlocks = new ArrayList<>();
         JsonArray jsonArray = json.getAsJsonObject("result").getAsJsonArray("items");
         for (int i = 0; i < articulsMap.size(); i++) {
-            int value = articulsMap.getByIndex(i);
-            for (int j = 0; j < value; j++) {
-                infoBlocks.add(jsonArray.get(i).toString());
+            JsonObject infoBlock = jsonArray.get(i).getAsJsonObject();
+            int num = articulsMap.get(infoBlock.get("offer_id").getAsString());
+            String infoBlockStr = infoBlock.toString();
+            for (int j = 0; j < num; j++) {
+                infoBlocks.add(infoBlockStr);
             }
         }
         return infoBlocks;

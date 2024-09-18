@@ -2,26 +2,23 @@ package me.terramain.ozonhelperserver;
 
 import java.util.*;
 
-public class ArraySortedMap<K, V> implements Map<K, V> {
-    private List<Map.Entry<K,V>> list;
+public class ArraySortedMap<K, V> {
+    private final List<Map.Entry<K,V>> list;
 
     public ArraySortedMap() {
         this.list = new ArrayList<>();
     }
 
-    @Override
     public int size() {
         return list.size();
     }
 
-    @Override
     public boolean isEmpty() {
         return size()==0;
     }
 
-    @Override
     public boolean containsKey(Object key) {
-        for (Entry<K, V> entry : list) {
+        for (Map.Entry<K, V> entry : list) {
             if (entry.getKey().equals(key)){
                 return true;
             }
@@ -29,9 +26,8 @@ public class ArraySortedMap<K, V> implements Map<K, V> {
         return false;
     }
 
-    @Override
     public boolean containsValue(Object value) {
-        for (Entry<K, V> entry : list) {
+        for (Map.Entry<K, V> entry : list) {
             if (entry.getValue().equals(value)){
                 return true;
             }
@@ -39,9 +35,8 @@ public class ArraySortedMap<K, V> implements Map<K, V> {
         return false;
     }
 
-    @Override
     public V get(Object key) {
-        for (Entry<K, V> entry : list) {
+        for (Map.Entry<K, V> entry : list) {
             if (entry.getKey().equals(key)){
                 return entry.getValue();
             }
@@ -49,21 +44,19 @@ public class ArraySortedMap<K, V> implements Map<K, V> {
         return null;
     }
 
-    @Override
     public V put(K key, V value) {
-        for (Entry<K, V> entry : list) {
+        for (Map.Entry<K, V> entry : list) {
             if (entry.getKey().equals(key)){
                 return entry.setValue(value);
             }
         }
-        Entry<K, V> entry = new ArrayEntry<>(key, value);
+        Map.Entry<K, V> entry = new ArrayEntry<>(key, value);
         list.add(entry);
         return entry.getValue();
     }
 
-    @Override
     public V remove(Object key) {
-        for (Entry<K, V> entry : list) {
+        for (Map.Entry<K, V> entry : list) {
             if (entry.getKey().equals(key)){
                 list.remove(entry);
                 return entry.getValue();
@@ -72,17 +65,14 @@ public class ArraySortedMap<K, V> implements Map<K, V> {
         return null;
     }
 
-    @Override
     public void putAll(Map<? extends K, ? extends V> m) {
         m.forEach(this::put);
     }
 
-    @Override
     public void clear() {
         list.clear();
     }
 
-    @Override
     public Set<K> keySet() {
         Set<K> set = new HashSet<>();
         list.forEach(kvEntry -> {
@@ -91,7 +81,6 @@ public class ArraySortedMap<K, V> implements Map<K, V> {
         return set;
     }
 
-    @Override
     public Collection<V> values() {
         Set<V> set = new HashSet<>();
         list.forEach(kvEntry -> {
@@ -100,12 +89,11 @@ public class ArraySortedMap<K, V> implements Map<K, V> {
         return set;
     }
 
-    @Override
-    public Set<Entry<K, V>> entrySet() {
+    public Set<Map.Entry<K, V>> entrySet() {
         return new HashSet<>(list);
     }
 
-    public static class ArrayEntry<K, V> implements Entry<K, V> {
+    public static class ArrayEntry<K, V> implements Map.Entry<K, V> {
         private final K key;
         private V value;
 
@@ -129,6 +117,9 @@ public class ArraySortedMap<K, V> implements Map<K, V> {
             this.value = value;
             return value;
         }
+    }
+    public List<Map.Entry<K,V>> entryList(){
+        return list;
     }
     public V getByIndex(int index){
         return list.get(index).getValue();
