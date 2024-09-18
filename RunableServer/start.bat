@@ -1,0 +1,1 @@
+start java -jar OzonHelperServer-1.0.jar
